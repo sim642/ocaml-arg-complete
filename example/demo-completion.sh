@@ -6,4 +6,4 @@ _demo ()
     COMPREPLY=($(./_build/default/example/demo.exe --complete "${COMP_WORDS[@]:1:COMP_CWORD}"))
 }
 
-complete -F _demo demo.exe
+complete -o default -F _demo demo.exe
