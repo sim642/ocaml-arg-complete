@@ -1,0 +1,3 @@
+(test
+ (name arg_complete_test)
+ (libraries ounit2 arg_complete))
