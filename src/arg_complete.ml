@@ -16,6 +16,7 @@ type spec =
   | Tuple of spec list
   | Rest of (string -> unit) * complete
   | Rest_all of (string list -> unit) * complete_all
+  | Expand of (string -> string array)
 
 type arg_speclist = (Arg.key * Arg.spec * Arg.doc) list
 type speclist = (Arg.key * spec * Arg.doc) list
@@ -35,6 +36,7 @@ let rec arg_spec: spec -> Arg.spec = function
   | Tuple l -> Arg.Tuple (List.map arg_spec l)
   | Rest (f, _c) -> Arg.Rest f
   | Rest_all (f, _c) -> Arg.Rest_all f
+  | Expand f -> Arg.Expand f
 
 let arg_speclist: speclist -> arg_speclist = fun l ->
   List.map (fun (k, sc, d) -> (k, arg_spec sc, d)) l
@@ -86,6 +88,7 @@ let complete_argv (argv: string array) (speclist: speclist) (anon_complete: comp
             in
             complete_rest argv'
           | Rest_all (_f, c), argv' -> c argv'
+          | Expand f, arg' :: argv' -> complete_arg (Array.to_list (f arg') @ argv')
           | _, _ -> failwith "cannot complete"
         in
         complete_spec spec argv'

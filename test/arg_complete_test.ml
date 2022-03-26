@@ -11,6 +11,7 @@ let speclist: (Arg.key * Arg_complete.spec * Arg.doc) list = [
   ("--tuple", Tuple [Bool (fun b -> Printf.printf "bool: %B" b); Symbol (["a"; "b"; "c"], (fun s -> Printf.printf "symbol: %s" s))], "Tuple");
   ("--", Rest ((fun s -> Printf.printf "rest: %s" s), (Arg_complete.complete_strings ["foo"; "bar"])), "Rest");
   ("-+", Rest_all ((fun _l -> Printf.printf "rest_all"), (function [arg] -> Arg_complete.complete_strings ["foo"; "bar"] arg | [_; arg] -> Arg_complete.complete_strings ["bar"] arg | _ -> failwith "too many args")), "Rest_all");
+  ("--expand", Expand (fun s -> [|s; s|]), "Expand");
 ]
 
 let anon_fun: Arg.anon_fun = fun s ->
@@ -81,6 +82,12 @@ let test_rest_all _ =
   assert_equal ["foo"; "bar"] (Arg_complete.complete_argv [|"program"; "-+"; ""|] speclist anon_complete);
   assert_equal ["bar"] (Arg_complete.complete_argv [|"program"; "-+"; "foo"; ""|] speclist anon_complete)
 
+let printer l = Format.asprintf "%a" (Format.pp_print_list Format.pp_print_string) l
+
+let test_expand _ =
+  assert_equal ~printer ["bar"; "baz"] (Arg_complete.complete_argv [|"program"; "--expand"; "b"|] speclist anon_complete);
+  assert_equal ~printer all_empty (Arg_complete.complete_argv [|"program"; "--expand"; "b"; ""|] speclist anon_complete)
+
 let tests =
   "arg_complete_test" >::: [
     "anon" >:: test_anon;
@@ -94,7 +101,8 @@ let tests =
     "symbol" >:: test_symbol;
     "tuple" >:: test_tuple;
     "rest" >:: test_rest;
-    "rest_all" >:: test_rest_all;
+    "rest" >:: test_rest;
+    "expand" >:: test_expand;
   ]
 
 let () = run_test_tt_main tests
