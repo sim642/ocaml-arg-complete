@@ -14,8 +14,7 @@ let speclist: (Arg.key * Arg_complete.spec * Arg.doc) list = [
 let anon_fun: Arg.anon_fun = fun s ->
   Printf.printf "anon: %s" s
 
-let anon_complete: Arg_complete.complete = fun _s ->
-  failwith "anon_complete"
+let anon_complete: Arg_complete.complete = Arg_complete.complete_strings ["bar"; "baz"]
 
 let usage_msg: Arg.usage_msg = "usage_msg"
 
@@ -23,12 +22,17 @@ let usage_msg: Arg.usage_msg = "usage_msg"
   Arg.parse_argv [|"program"; "--unit"|] speclist anon_fun usage_msg *)
 
 let all_keys = List.map (fun (key, _, _) -> key) speclist
+let all_empty = all_keys @ ["bar"; "baz"]
+
+let test_anon _ =
+  assert_equal ["bar"; "baz"] (Arg_complete.complete_argv [|"program"; "b"|] speclist anon_complete);
+  assert_equal ["bar"; "baz"] (Arg_complete.complete_argv [|"program"; "--unit"; "b"|] speclist anon_complete)
 
 let test_key _ =
   assert_equal ["--unit"] (Arg_complete.complete_argv [|"program"; "--uni"|] speclist anon_complete);
   assert_equal ["--string"] (Arg_complete.complete_argv [|"program"; "--str"|] speclist anon_complete);
   assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--"|] speclist anon_complete);
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; ""|] speclist anon_complete);
+  assert_equal all_empty (Arg_complete.complete_argv [|"program"; ""|] speclist anon_complete);
   assert_equal [] (Arg_complete.complete_argv [|"program"; "--unit"|] speclist anon_complete)
 
 let test_unit _ =
@@ -37,38 +41,39 @@ let test_unit _ =
 let test_bool _ =
   assert_equal ["false"; "true"] (Arg_complete.complete_argv [|"program"; "--bool"; ""|] speclist anon_complete);
   assert_equal ["true"] (Arg_complete.complete_argv [|"program"; "--bool"; "t"|] speclist anon_complete);
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--bool"; "true"; ""|] speclist anon_complete)
+  assert_equal all_empty (Arg_complete.complete_argv [|"program"; "--bool"; "true"; ""|] speclist anon_complete)
 
 let test_set _ =
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--set"; ""|] speclist anon_complete)
+  assert_equal all_empty (Arg_complete.complete_argv [|"program"; "--set"; ""|] speclist anon_complete)
 
 let test_clear _ =
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--clear"; ""|] speclist anon_complete)
+  assert_equal all_empty (Arg_complete.complete_argv [|"program"; "--clear"; ""|] speclist anon_complete)
 
 let test_string _ =
   assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv [|"program"; "--string"; ""|] speclist anon_complete);
   assert_equal ["a"] (Arg_complete.complete_argv [|"program"; "--string"; "a"|] speclist anon_complete);
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--string"; "a"; ""|] speclist anon_complete)
+  assert_equal all_empty (Arg_complete.complete_argv [|"program"; "--string"; "a"; ""|] speclist anon_complete)
 
 let test_set_string _ =
   assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv [|"program"; "--set_string"; ""|] speclist anon_complete);
   assert_equal ["a"] (Arg_complete.complete_argv [|"program"; "--set_string"; "a"|] speclist anon_complete);
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--set_string"; "a"; ""|] speclist anon_complete)
+  assert_equal all_empty (Arg_complete.complete_argv [|"program"; "--set_string"; "a"; ""|] speclist anon_complete)
 
 let test_symbol _ =
   assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv [|"program"; "--symbol"; ""|] speclist anon_complete);
   assert_equal ["a"] (Arg_complete.complete_argv [|"program"; "--symbol"; "a"|] speclist anon_complete);
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--symbol"; "a"; ""|] speclist anon_complete)
+  assert_equal all_empty (Arg_complete.complete_argv [|"program"; "--symbol"; "a"; ""|] speclist anon_complete)
 
 let test_tuple _ =
   assert_equal ["false"; "true"] (Arg_complete.complete_argv [|"program"; "--tuple"; ""|] speclist anon_complete);
   assert_equal ["true"] (Arg_complete.complete_argv [|"program"; "--tuple"; "t"|] speclist anon_complete);
   assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv [|"program"; "--tuple"; "true"; ""|] speclist anon_complete);
   assert_equal ["a"] (Arg_complete.complete_argv [|"program"; "--tuple"; "true"; "a"|] speclist anon_complete);
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--tuple"; "true"; "a"; ""|] speclist anon_complete)
+  assert_equal all_empty (Arg_complete.complete_argv [|"program"; "--tuple"; "true"; "a"; ""|] speclist anon_complete)
 
 let tests =
   "arg_complete_test" >::: [
+    "anon" >:: test_anon;
     "key" >:: test_key;
     "unit" >:: test_unit;
     "bool" >:: test_bool;

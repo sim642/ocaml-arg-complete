@@ -37,7 +37,7 @@ let arg_speclist: speclist -> arg_speclist = fun l ->
 let complete_strings l s =
   List.filter (String.starts_with ~prefix:s) l
 
-let complete_argv (argv: string array) (speclist: speclist) (_anon_complete: complete): string list =
+let complete_argv (argv: string array) (speclist: speclist) (anon_complete: complete): string list =
   let rec complete_arg (argv: string list) =
     match argv with
     | [] -> []
@@ -77,11 +77,23 @@ let complete_argv (argv: string array) (speclist: speclist) (_anon_complete: com
         in
         complete_spec spec argv'
       with Not_found ->
-        List.filter_map (fun (key, _spec, _doc) ->
-            if String.starts_with ~prefix:arg key then
-              Some key
+        if argv' = [] then
+          let commands =
+            List.filter_map (fun (key, _spec, _doc) ->
+                if String.starts_with ~prefix:arg key then
+                  Some key
+                else
+                  None
+              ) speclist
+          in
+          let anons =
+            if String.length arg = 0 || arg.[0] <> '-' then
+              anon_complete arg
             else
-              None
-          ) speclist
+              []
+          in
+          commands @ anons
+        else
+          complete_arg argv'
   in
   complete_arg (List.tl (Array.to_list argv))
