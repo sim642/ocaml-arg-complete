@@ -7,6 +7,7 @@ let speclist: (Arg.key * Arg_complete.spec * Arg.doc) list = [
   ("--clear", Clear (ref false), "Clear");
   ("--string", String ((fun s -> Printf.printf "string: %s" s), (Arg_complete.complete_strings ["a"; "b"; "c"])), "String");
   ("--set_string", Set_string (ref "", (Arg_complete.complete_strings ["a"; "b"; "c"])), "Set_string");
+  ("--symbol", Symbol (["a"; "b"; "c"], (fun s -> Printf.printf "symbol: %s" s)), "Symbol");
 ]
 
 let anon_fun: Arg.anon_fun = fun s ->
@@ -53,6 +54,11 @@ let test_set_string _ =
   assert_equal ["a"] (Arg_complete.complete_argv [|"program"; "--set_string"; "a"|] speclist anon_complete);
   assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--set_string"; "a"; ""|] speclist anon_complete)
 
+let test_symbol _ =
+  assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv [|"program"; "--symbol"; ""|] speclist anon_complete);
+  assert_equal ["a"] (Arg_complete.complete_argv [|"program"; "--symbol"; "a"|] speclist anon_complete);
+  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--symbol"; "a"; ""|] speclist anon_complete)
+
 let tests =
   "arg_complete_test" >::: [
     "key" >:: test_key;
@@ -62,6 +68,7 @@ let tests =
     "clear" >:: test_clear;
     "string" >:: test_string;
     "set_string" >:: test_set_string;
+    "symbol" >:: test_symbol;
   ]
 
 let () = run_test_tt_main tests
