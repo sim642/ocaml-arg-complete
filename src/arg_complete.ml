@@ -1,4 +1,5 @@
 type complete = string -> string list
+type complete_all = string list -> string list
 
 type spec =
   | Unit of (unit -> unit)
@@ -13,6 +14,8 @@ type spec =
   | Set_float of float ref * complete
   | Symbol of string list * (string -> unit)
   | Tuple of spec list
+  | Rest of (string -> unit) * complete
+  | Rest_all of (string list -> unit) * complete_all
 
 type arg_speclist = (Arg.key * Arg.spec * Arg.doc) list
 type speclist = (Arg.key * spec * Arg.doc) list
@@ -30,6 +33,8 @@ let rec arg_spec: spec -> Arg.spec = function
   | Set_float (r, _c) -> Arg.Set_float r
   | Symbol (l, f) -> Arg.Symbol (l, f)
   | Tuple l -> Arg.Tuple (List.map arg_spec l)
+  | Rest (f, _c) -> Arg.Rest f
+  | Rest_all (f, _c) -> Arg.Rest_all f
 
 let arg_speclist: speclist -> arg_speclist = fun l ->
   List.map (fun (k, sc, d) -> (k, arg_spec sc, d)) l
@@ -73,6 +78,14 @@ let complete_argv (argv: string array) (speclist: speclist) (anon_complete: comp
             complete_tuple l argv'
           | Symbol (l, _f), [arg'] -> complete_strings l arg'
           | Symbol (_l, _f), _ :: argv' -> complete_arg argv'
+          | Rest (_f, c), argv' ->
+            let rec complete_rest = function
+              | [arg] -> c arg
+              | _ :: argv' -> complete_rest argv'
+              | _ -> failwith "cannot complete rest"
+            in
+            complete_rest argv'
+          | Rest_all (_f, c), argv' -> c argv'
           | _, _ -> failwith "cannot complete"
         in
         complete_spec spec argv'

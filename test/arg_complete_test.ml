@@ -8,7 +8,9 @@ let speclist: (Arg.key * Arg_complete.spec * Arg.doc) list = [
   ("--string", String ((fun s -> Printf.printf "string: %s" s), (Arg_complete.complete_strings ["a"; "b"; "c"])), "String");
   ("--set_string", Set_string (ref "", (Arg_complete.complete_strings ["a"; "b"; "c"])), "Set_string");
   ("--symbol", Symbol (["a"; "b"; "c"], (fun s -> Printf.printf "symbol: %s" s)), "Symbol");
-  ("--tuple", Tuple [Bool (fun b -> Printf.printf "bool: %B" b); Symbol (["a"; "b"; "c"], (fun s -> Printf.printf "symbol: %s" s))], "Tuple")
+  ("--tuple", Tuple [Bool (fun b -> Printf.printf "bool: %B" b); Symbol (["a"; "b"; "c"], (fun s -> Printf.printf "symbol: %s" s))], "Tuple");
+  ("--", Rest ((fun s -> Printf.printf "rest: %s" s), (Arg_complete.complete_strings ["foo"; "bar"])), "Rest");
+  ("-+", Rest_all ((fun _l -> Printf.printf "rest_all"), (function [arg] -> Arg_complete.complete_strings ["foo"; "bar"] arg | [_; arg] -> Arg_complete.complete_strings ["bar"] arg | _ -> failwith "too many args")), "Rest_all");
 ]
 
 let anon_fun: Arg.anon_fun = fun s ->
@@ -31,7 +33,7 @@ let test_anon _ =
 let test_key _ =
   assert_equal ["--unit"] (Arg_complete.complete_argv [|"program"; "--uni"|] speclist anon_complete);
   assert_equal ["--string"] (Arg_complete.complete_argv [|"program"; "--str"|] speclist anon_complete);
-  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "--"|] speclist anon_complete);
+  assert_equal all_keys (Arg_complete.complete_argv [|"program"; "-"|] speclist anon_complete);
   assert_equal all_empty (Arg_complete.complete_argv [|"program"; ""|] speclist anon_complete);
   assert_equal [] (Arg_complete.complete_argv [|"program"; "--unit"|] speclist anon_complete)
 
@@ -71,6 +73,14 @@ let test_tuple _ =
   assert_equal ["a"] (Arg_complete.complete_argv [|"program"; "--tuple"; "true"; "a"|] speclist anon_complete);
   assert_equal all_empty (Arg_complete.complete_argv [|"program"; "--tuple"; "true"; "a"; ""|] speclist anon_complete)
 
+let test_rest _ =
+  assert_equal ["foo"; "bar"] (Arg_complete.complete_argv [|"program"; "--"; ""|] speclist anon_complete);
+  assert_equal ["foo"; "bar"] (Arg_complete.complete_argv [|"program"; "--"; "foo"; ""|] speclist anon_complete)
+
+let test_rest_all _ =
+  assert_equal ["foo"; "bar"] (Arg_complete.complete_argv [|"program"; "-+"; ""|] speclist anon_complete);
+  assert_equal ["bar"] (Arg_complete.complete_argv [|"program"; "-+"; "foo"; ""|] speclist anon_complete)
+
 let tests =
   "arg_complete_test" >::: [
     "anon" >:: test_anon;
@@ -83,6 +93,8 @@ let tests =
     "set_string" >:: test_set_string;
     "symbol" >:: test_symbol;
     "tuple" >:: test_tuple;
+    "rest" >:: test_rest;
+    "rest_all" >:: test_rest_all;
   ]
 
 let () = run_test_tt_main tests
