@@ -44,13 +44,13 @@ let arg_speclist: speclist -> arg_speclist = fun l ->
 let complete_strings l s =
   List.filter (String.starts_with ~prefix:s) l
 
-let complete_argv (argv: string array) (speclist: speclist) (anon_complete: complete): string list =
+let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
   let rec complete_arg (argv: string list) =
     match argv with
     | [] -> []
     | arg :: argv' ->
       try
-        let (_, spec, _) = List.find (fun (key, _, _) -> arg = key) speclist in
+        let (key, spec, _) = List.find (fun (key, _, _) -> arg = key) speclist in
         let rec complete_spec spec argv' =
           match spec, argv' with
           | Unit _f, argv' -> complete_arg argv'
@@ -91,7 +91,10 @@ let complete_argv (argv: string array) (speclist: speclist) (anon_complete: comp
           | Expand f, arg' :: argv' -> complete_arg (Array.to_list (f arg') @ argv')
           | _, _ -> failwith "cannot complete"
         in
-        complete_spec spec argv'
+        if argv' = [] then
+          [key] (* complete key itself *)
+        else
+          complete_spec spec argv'
       with Not_found ->
         if argv' = [] then
           let commands =
@@ -112,4 +115,4 @@ let complete_argv (argv: string array) (speclist: speclist) (anon_complete: comp
         else
           complete_arg argv'
   in
-  complete_arg (List.tl (Array.to_list argv))
+  complete_arg argv
