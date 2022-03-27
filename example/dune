@@ -1,4 +1,8 @@
+(rule
+ (targets demo.ml)
+ (action (run %{bin:cppo} -V OCAML:%{ocaml_version}
+              %{dep:demo.cppo.ml} -o %{targets})))
+
 (executable
  (name demo)
- (enabled_if (>= %{ocaml_version} 4.12))
  (libraries arg_complete))
