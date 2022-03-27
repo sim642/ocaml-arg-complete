@@ -63,8 +63,10 @@ let starts_with ~prefix s =
   in len_s >= len_pre && aux 0
 #endif
 
-let complete_strings l s =
+let strings l s =
   List.filter (starts_with ~prefix:s) l
+
+let empty _ = []
 
 #if OCAML_VERSION >= (4, 8, 0)
 let filter_map = List.filter_map
@@ -91,7 +93,7 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
         let rec complete_spec spec argv' =
           match spec, argv' with
           | Unit _f, argv' -> complete_arg argv'
-          | Bool _f, [arg'] -> complete_strings ["false"; "true"] arg'
+          | Bool _f, [arg'] -> strings ["false"; "true"] arg'
           | Bool _f, _ :: argv' -> complete_arg argv'
           | Set _r, argv' -> complete_arg argv'
           | Clear _r, argv' -> complete_arg argv'
@@ -115,7 +117,7 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
               | _, _ -> failwith "cannot complete tuple"
             in
             complete_tuple l argv'
-          | Symbol (l, _f), [arg'] -> complete_strings l arg'
+          | Symbol (l, _f), [arg'] -> strings l arg'
           | Symbol (_l, _f), _ :: argv' -> complete_arg argv'
           | Rest (_f, c), argv' ->
             let rec complete_rest = function
