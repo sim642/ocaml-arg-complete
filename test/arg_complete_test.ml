@@ -12,6 +12,12 @@ let speclist: (Arg.key * Arg_complete.spec * Arg.doc) list = [
   ("--", Rest ((fun s -> Printf.printf "rest: %s" s), (Arg_complete.complete_strings ["foo"; "bar"])), "Rest");
   ("-+", Rest_all ((fun _l -> Printf.printf "rest_all"), (function [arg] -> Arg_complete.complete_strings ["foo"; "bar"] arg | [_; arg] -> Arg_complete.complete_strings ["bar"] arg | _ -> failwith "too many args")), "Rest_all");
   ("--expand", Expand (fun s -> [|s; s|]), "Expand");
+  ("--side_effect",
+    (let tmp = ref "" in
+    let spec1 = Arg_complete.Set_string (tmp, (fun s -> tmp := s; [])) in
+    let spec2 = Arg_complete.String ((fun s -> Printf.printf "side_effect: %s" s), (fun _ -> [!tmp])) in
+    Tuple [spec1; spec2]),
+    "side effect");
 ]
 
 let anon_fun: Arg.anon_fun = fun s ->
@@ -88,6 +94,11 @@ let test_expand _ =
   assert_equal ~printer ["bar"; "baz"] (Arg_complete.complete_argv ["--expand"; "b"] speclist anon_complete);
   assert_equal ~printer all_empty (Arg_complete.complete_argv ["--expand"; "b"; ""] speclist anon_complete)
 
+let test_side_effect _ =
+  assert_equal ~printer [] (Arg_complete.complete_argv ["--side_effect"; ""] speclist anon_complete);
+  assert_equal ~printer ["foo"] (Arg_complete.complete_argv ["--side_effect"; "foo"; ""] speclist anon_complete);
+  assert_equal ~printer all_empty (Arg_complete.complete_argv ["--side_effect"; "foo"; "foo"; ""] speclist anon_complete)
+
 let tests =
   "arg_complete_test" >::: [
     "anon" >:: test_anon;
@@ -103,6 +114,7 @@ let tests =
     "rest" >:: test_rest;
     "rest" >:: test_rest;
     "expand" >:: test_expand;
+    "side_effect" >:: test_side_effect;
   ]
 
 let () = run_test_tt_main tests

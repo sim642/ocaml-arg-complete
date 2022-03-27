@@ -59,21 +59,21 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
           | Set _r, argv' -> complete_arg argv'
           | Clear _r, argv' -> complete_arg argv'
           | String (_f, c), [arg'] -> c arg'
-          | String (_f, _c), _ :: argv' -> complete_arg argv'
+          | String (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
           | Set_string (_r, c), [arg'] -> c arg'
-          | Set_string (_r, _c), _ :: argv' -> complete_arg argv'
+          | Set_string (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
           | Int (_f, c), [arg'] -> c arg'
-          | Int (_f, _c), _ :: argv' -> complete_arg argv'
+          | Int (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
           | Set_int (_r, c), [arg'] -> c arg'
-          | Set_int (_r, _c), _ :: argv' -> complete_arg argv'
+          | Set_int (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
           | Float (_f, c), [arg'] -> c arg'
-          | Float (_f, _c), _ :: argv' -> complete_arg argv'
+          | Float (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
           | Set_float (_r, c), [arg'] -> c arg'
-          | Set_float (_r, _c), _ :: argv' -> complete_arg argv'
+          | Set_float (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
           | Tuple l, argv' ->
             let rec complete_tuple l argv' = match l, argv' with
               | s :: _, [arg'] -> complete_spec s [arg']
-              | _ :: l', _ :: argv' -> complete_tuple l' argv'
+              | s :: l', arg' :: argv' -> ignore (complete_spec s [arg']); complete_tuple l' argv'
               | [], argv' -> complete_arg argv'
               | _, _ -> failwith "cannot complete tuple"
             in
@@ -83,7 +83,7 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
           | Rest (_f, c), argv' ->
             let rec complete_rest = function
               | [arg] -> c arg
-              | _ :: argv' -> complete_rest argv'
+              | arg :: argv' -> ignore (c arg); complete_rest argv'
               | _ -> failwith "cannot complete rest"
             in
             complete_rest argv'
