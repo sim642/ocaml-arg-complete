@@ -68,21 +68,6 @@ let strings l s =
 
 let empty _ = []
 
-#if OCAML_VERSION >= (4, 8, 0)
-let filter_map = List.filter_map
-#else
-(* Copied from OCaml Stdlib *)
-let filter_map f =
-  let rec aux accu = function
-    | [] -> List.rev accu
-    | x :: l ->
-        match f x with
-        | None -> aux accu l
-        | Some v -> aux (v :: accu) l
-  in
-  aux []
-#endif
-
 let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
   let rec complete_arg (argv: string list) =
     match argv with
@@ -142,13 +127,17 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
         if argv' = [] then
           if String.length arg = 0 || arg.[0] <> '-' then
             anon_complete arg
-          else
-            filter_map (fun (key, _spec, _doc) ->
+          else (
+            (* List.filter_map for OCaml < 4.08 *)
+            speclist
+            |> List.fold_left (fun acc (key, _spec, _doc) ->
                 if starts_with ~prefix:arg key then
-                  Some key
+                  key :: acc
                 else
-                  None
-              ) speclist
+                  acc
+              ) []
+            |> List.rev
+          )
         else
           complete_arg argv'
   in
