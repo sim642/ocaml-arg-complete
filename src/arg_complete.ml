@@ -97,21 +97,15 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
           complete_spec spec argv'
       with Not_found ->
         if argv' = [] then
-          let commands =
+          if String.length arg = 0 || arg.[0] <> '-' then
+            anon_complete arg
+          else
             List.filter_map (fun (key, _spec, _doc) ->
                 if String.starts_with ~prefix:arg key then
                   Some key
                 else
                   None
               ) speclist
-          in
-          let anons =
-            if String.length arg = 0 || arg.[0] <> '-' then
-              anon_complete arg
-            else
-              []
-          in
-          commands @ anons
         else
           complete_arg argv'
   in

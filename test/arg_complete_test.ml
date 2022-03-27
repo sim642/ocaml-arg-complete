@@ -31,7 +31,7 @@ let usage_msg: Arg.usage_msg = "usage_msg"
   Arg.parse_argv ["--unit"] speclist anon_fun usage_msg *)
 
 let all_keys = List.map (fun (key, _, _) -> key) speclist
-let all_empty = all_keys @ ["bar"; "baz"]
+let all_empty = ["bar"; "baz"]
 
 let test_anon _ =
   assert_equal ["bar"; "baz"] (Arg_complete.complete_argv ["b"] speclist anon_complete);
