@@ -1,3 +1,10 @@
 (executable
+ (name demo)
+ (modules demo)
+ (enabled_if (>= %{ocaml_version} 4.12))
+ (libraries arg_complete))
+
+(executable
  (name demo_compat)
+ (modules demo_compat)
  (libraries arg_complete))
