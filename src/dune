@@ -1,2 +1,3 @@
 (library
- (name arg_complete))
+ (name arg_complete)
+ (public_name arg-complete))
