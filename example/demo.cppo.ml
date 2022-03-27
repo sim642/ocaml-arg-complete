@@ -19,7 +19,9 @@ let rec speclist: (Arg.key * Arg_complete.spec * Arg.doc) list = [
 #if OCAML_VERSION >= (4, 12, 0)
   ("-+", Rest_all ((fun _l -> Printf.printf "rest_all"), (function [arg] -> Arg_complete.complete_strings ["foo"; "bar"] arg | [_; arg] -> Arg_complete.complete_strings ["bar"] arg | _ -> failwith "too many args")), "Rest_all");
 #endif
+#if OCAML_VERSION >= (4, 5, 0)
   ("--expand", Expand (fun s -> [|s; s|]), "Expand");
+#endif
 #if OCAML_VERSION >= (4, 12, 0)
   ("--complete", Rest_all (complete_all, fun _ -> failwith "complete complete"), "Complete");
 #else

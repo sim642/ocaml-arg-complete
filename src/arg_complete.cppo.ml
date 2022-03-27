@@ -18,7 +18,9 @@ type spec =
 #if OCAML_VERSION >= (4, 12, 0)
   | Rest_all of (string list -> unit) * complete_all
 #endif
+#if OCAML_VERSION >= (4, 5, 0)
   | Expand of (string -> string array)
+#endif
 
 type arg_speclist = (Arg.key * Arg.spec * Arg.doc) list
 type speclist = (Arg.key * spec * Arg.doc) list
@@ -40,7 +42,9 @@ let rec arg_spec: spec -> Arg.spec = function
 #if OCAML_VERSION >= (4, 12, 0)
   | Rest_all (f, _c) -> Arg.Rest_all f
 #endif
+#if OCAML_VERSION >= (4, 5, 0)
   | Expand f -> Arg.Expand f
+#endif
 
 let arg_speclist: speclist -> arg_speclist = fun l ->
   List.map (fun (k, sc, d) -> (k, arg_spec sc, d)) l
@@ -123,7 +127,9 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
 #if OCAML_VERSION >= (4, 12, 0)
           | Rest_all (_f, c), argv' -> c argv'
 #endif
+#if OCAML_VERSION >= (4, 5, 0)
           | Expand f, arg' :: argv' -> complete_arg (Array.to_list (f arg') @ argv')
+#endif
           | _, _ -> failwith "cannot complete"
         in
         if argv' = [] then
