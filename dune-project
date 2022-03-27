@@ -11,4 +11,5 @@
  (synopsis "Bash completion support for Stdlib.Arg")
  ; (description "TODO")
  (depends
+  cppo
   (ounit2 :with-test)))

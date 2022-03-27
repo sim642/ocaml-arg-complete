@@ -1,3 +1,8 @@
+(rule
+ (targets arg_complete_test.ml)
+ (action (run %{bin:cppo} -V OCAML:%{ocaml_version}
+              %{dep:arg_complete_test.cppo.ml} -o %{targets})))
+
 (test
  (name arg_complete_test)
  (libraries ounit2 arg_complete))

@@ -15,7 +15,9 @@ type spec =
   | Symbol of string list * (string -> unit)
   | Tuple of spec list
   | Rest of (string -> unit) * complete
+#if OCAML_VERSION >= (4, 12, 0)
   | Rest_all of (string list -> unit) * complete_all
+#endif
   | Expand of (string -> string array)
 
 type arg_speclist = (Arg.key * Arg.spec * Arg.doc) list
@@ -35,14 +37,30 @@ let rec arg_spec: spec -> Arg.spec = function
   | Symbol (l, f) -> Arg.Symbol (l, f)
   | Tuple l -> Arg.Tuple (List.map arg_spec l)
   | Rest (f, _c) -> Arg.Rest f
+#if OCAML_VERSION >= (4, 12, 0)
   | Rest_all (f, _c) -> Arg.Rest_all f
+#endif
   | Expand f -> Arg.Expand f
 
 let arg_speclist: speclist -> arg_speclist = fun l ->
   List.map (fun (k, sc, d) -> (k, arg_spec sc, d)) l
 
+#if OCAML_VERSION >= (4, 12, 0)
+let starts_with = String.starts_with
+#else
+(* Copied from OCaml Stdlib *)
+let starts_with ~prefix s =
+  let len_s = String.length s
+  and len_pre = String.length prefix in
+  let rec aux i =
+    if i = len_pre then true
+    else if String.unsafe_get s i <> String.unsafe_get prefix i then false
+    else aux (i + 1)
+  in len_s >= len_pre && aux 0
+#endif
+
 let complete_strings l s =
-  List.filter (String.starts_with ~prefix:s) l
+  List.filter (starts_with ~prefix:s) l
 
 let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
   let rec complete_arg (argv: string list) =
@@ -87,7 +105,9 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
               | _ -> failwith "cannot complete rest"
             in
             complete_rest argv'
+#if OCAML_VERSION >= (4, 12, 0)
           | Rest_all (_f, c), argv' -> c argv'
+#endif
           | Expand f, arg' :: argv' -> complete_arg (Array.to_list (f arg') @ argv')
           | _, _ -> failwith "cannot complete"
         in
@@ -101,7 +121,7 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
             anon_complete arg
           else
             List.filter_map (fun (key, _spec, _doc) ->
-                if String.starts_with ~prefix:arg key then
+                if starts_with ~prefix:arg key then
                   Some key
                 else
                   None

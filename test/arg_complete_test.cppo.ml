@@ -10,7 +10,9 @@ let speclist: (Arg.key * Arg_complete.spec * Arg.doc) list = [
   ("--symbol", Symbol (["a"; "b"; "c"], (fun s -> Printf.printf "symbol: %s" s)), "Symbol");
   ("--tuple", Tuple [Bool (fun b -> Printf.printf "bool: %B" b); Symbol (["a"; "b"; "c"], (fun s -> Printf.printf "symbol: %s" s))], "Tuple");
   ("--", Rest ((fun s -> Printf.printf "rest: %s" s), (Arg_complete.complete_strings ["foo"; "bar"])), "Rest");
+#if OCAML_VERSION >= (4, 12, 0)
   ("-+", Rest_all ((fun _l -> Printf.printf "rest_all"), (function [arg] -> Arg_complete.complete_strings ["foo"; "bar"] arg | [_; arg] -> Arg_complete.complete_strings ["bar"] arg | _ -> failwith "too many args")), "Rest_all");
+#endif
   ("--expand", Expand (fun s -> [|s; s|]), "Expand");
   ("--side_effect",
     (let tmp = ref "" in
@@ -85,8 +87,12 @@ let test_rest _ =
   assert_equal ["foo"; "bar"] (Arg_complete.complete_argv ["--"; "foo"; ""] speclist anon_complete)
 
 let test_rest_all _ =
+#if OCAML_VERSION >= (4, 12, 0)
   assert_equal ["foo"; "bar"] (Arg_complete.complete_argv ["-+"; ""] speclist anon_complete);
   assert_equal ["bar"] (Arg_complete.complete_argv ["-+"; "foo"; ""] speclist anon_complete)
+#else
+  skip_if true "OCaml < 4.12 doesn't have Arg.Rest_all"
+#endif
 
 let printer l = Format.asprintf "%a" (Format.pp_print_list Format.pp_print_string) l
 
@@ -112,7 +118,7 @@ let tests =
     "symbol" >:: test_symbol;
     "tuple" >:: test_tuple;
     "rest" >:: test_rest;
-    "rest" >:: test_rest;
+    "rest_all" >:: test_rest_all;
     "expand" >:: test_expand;
     "side_effect" >:: test_side_effect;
   ]

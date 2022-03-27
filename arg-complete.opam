@@ -8,6 +8,7 @@ homepage: "https://github.com/sim642/ocaml-arg-complete"
 bug-reports: "https://github.com/sim642/ocaml-arg-complete/issues"
 depends: [
   "dune" {>= "2.8"}
+  "cppo"
   "ounit2" {with-test}
   "odoc" {with-doc}
 ]
