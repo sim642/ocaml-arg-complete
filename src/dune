@@ -1,4 +1,9 @@
 (rule
+ (targets arg_complete.mli)
+ (action (run %{bin:cppo} -V OCAML:%{ocaml_version}
+              %{dep:arg_complete.cppo.mli} -o %{targets})))
+
+(rule
  (targets arg_complete.ml)
  (action (run %{bin:cppo} -V OCAML:%{ocaml_version}
               %{dep:arg_complete.cppo.ml} -o %{targets})))

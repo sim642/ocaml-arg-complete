@@ -70,6 +70,7 @@ let strings l s =
   List.filter (Util.starts_with ~prefix:s) l
 
 let empty _ = []
+let empty_all _ = []
 
 let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
   let rec complete_arg (argv: string list) =

@@ -9,7 +9,7 @@ let rec speclist: Arg_complete.speclist Lazy.t = lazy [
   ("--file", String (Printf.printf "file: %s\n", Arg_complete.empty), "File"); (* -o default in script changes empty completion to default filename completion *)
   ("--complete", Arg_complete.Rest_all_compat.spec (Lazy.force rest_all_complete), "Complete");
 ]
-and rest_all_complete = lazy (Arg_complete.Rest_all_compat.create complete Arg_complete.empty)
+and rest_all_complete = lazy (Arg_complete.Rest_all_compat.create complete Arg_complete.empty_all)
 and complete args =
   Arg_complete.complete_argv args (Lazy.force speclist) anon_complete
   |> List.iter print_endline
