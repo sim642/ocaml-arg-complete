@@ -12,8 +12,8 @@ type spec =
   | Set_int of int ref * complete
   | Float of (float -> unit) * complete
   | Set_float of float ref * complete
-  | Symbol of string list * (string -> unit)
   | Tuple of spec list
+  | Symbol of string list * (string -> unit)
   | Rest of (string -> unit) * complete
 #if OCAML_VERSION >= (4, 12, 0)
   | Rest_all of (string list -> unit) * complete_all
@@ -71,6 +71,8 @@ let strings l s =
 
 let empty _ = []
 let empty_all _ = []
+
+type anon_complete = complete
 
 let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
   let rec complete_arg (argv: string list) =
