@@ -49,22 +49,25 @@ let rec arg_spec: spec -> Arg.spec = function
 let arg_speclist: speclist -> arg_speclist = fun l ->
   List.map (fun (k, sc, d) -> (k, arg_spec sc, d)) l
 
+module Util =
+struct
 #if OCAML_VERSION >= (4, 13, 0)
-let starts_with = String.starts_with
+  let starts_with = String.starts_with
 #else
-(* Copied from OCaml Stdlib *)
-let starts_with ~prefix s =
-  let len_s = String.length s
-  and len_pre = String.length prefix in
-  let rec aux i =
-    if i = len_pre then true
-    else if String.unsafe_get s i <> String.unsafe_get prefix i then false
-    else aux (i + 1)
-  in len_s >= len_pre && aux 0
+  (* Copied from OCaml Stdlib *)
+  let starts_with ~prefix s =
+    let len_s = String.length s
+    and len_pre = String.length prefix in
+    let rec aux i =
+      if i = len_pre then true
+      else if String.unsafe_get s i <> String.unsafe_get prefix i then false
+      else aux (i + 1)
+    in len_s >= len_pre && aux 0
 #endif
+end
 
 let strings l s =
-  List.filter (starts_with ~prefix:s) l
+  List.filter (Util.starts_with ~prefix:s) l
 
 let empty _ = []
 
@@ -131,7 +134,7 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
             (* List.filter_map for OCaml < 4.08 *)
             speclist
             |> List.fold_left (fun acc (key, _spec, _doc) ->
-                if starts_with ~prefix:arg key then
+                if Util.starts_with ~prefix:arg key then
                   key :: acc
                 else
                   acc
