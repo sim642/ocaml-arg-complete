@@ -33,7 +33,7 @@ let all_empty = ["bar"; "baz"]
 
 
 let assert_complete expected args =
-  let printer = Format.asprintf "%a" (Format.pp_print_list Format.pp_print_string) in
+  let printer = Format.asprintf "%a" (Format.pp_print_list ~pp_sep:(fun ppf () -> Format.pp_print_string ppf ", ") Format.pp_print_string) in
   assert_equal ~printer expected (Arg_complete.complete_argv args speclist anon_complete)
 
 
@@ -85,6 +85,7 @@ let test_tuple _ =
   assert_complete all_empty ["--tuple"; "true"; "a"; ""]
 
 let test_rest _ =
+  assert_complete (List.filter (Arg_complete.Util.starts_with ~prefix:"--") all_keys) ["--"];
   assert_complete ["foo"; "bar"] ["--"; ""];
   assert_complete ["foo"; "bar"] ["--"; "foo"; ""]
 
