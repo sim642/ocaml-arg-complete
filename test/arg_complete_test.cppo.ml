@@ -32,75 +32,78 @@ let all_keys = List.map (fun (key, _, _) -> key) speclist
 let all_empty = ["bar"; "baz"]
 
 
+let assert_complete expected args =
+  let printer = Format.asprintf "%a" (Format.pp_print_list Format.pp_print_string) in
+  assert_equal ~printer expected (Arg_complete.complete_argv args speclist anon_complete)
+
+
 let test_anon _ =
-  assert_equal ["bar"; "baz"] (Arg_complete.complete_argv ["b"] speclist anon_complete);
-  assert_equal ["bar"; "baz"] (Arg_complete.complete_argv ["--unit"; "b"] speclist anon_complete)
+  assert_complete ["bar"; "baz"] ["b"];
+  assert_complete ["bar"; "baz"] ["--unit"; "b"]
 
 let test_key _ =
-  assert_equal ["--unit"] (Arg_complete.complete_argv ["--uni"] speclist anon_complete);
-  assert_equal ["--string"] (Arg_complete.complete_argv ["--str"] speclist anon_complete);
-  assert_equal all_keys (Arg_complete.complete_argv ["-"] speclist anon_complete);
-  assert_equal all_empty (Arg_complete.complete_argv [""] speclist anon_complete);
-  assert_equal ["--unit"] (Arg_complete.complete_argv ["--unit"] speclist anon_complete)
+  assert_complete ["--unit"] ["--uni"];
+  assert_complete ["--string"] ["--str"];
+  assert_complete all_keys ["-"];
+  assert_complete all_empty [""];
+  assert_complete ["--unit"] ["--unit"]
 
 let test_unit _ =
-  assert_equal ["--unit"] (Arg_complete.complete_argv ["--unit"; "--un"] speclist anon_complete)
+  assert_complete ["--unit"] ["--unit"; "--un"]
 
 let test_bool _ =
-  assert_equal ["false"; "true"] (Arg_complete.complete_argv ["--bool"; ""] speclist anon_complete);
-  assert_equal ["true"] (Arg_complete.complete_argv ["--bool"; "t"] speclist anon_complete);
-  assert_equal all_empty (Arg_complete.complete_argv ["--bool"; "true"; ""] speclist anon_complete)
+  assert_complete ["false"; "true"] ["--bool"; ""];
+  assert_complete ["true"] ["--bool"; "t"];
+  assert_complete all_empty ["--bool"; "true"; ""]
 
 let test_set _ =
-  assert_equal all_empty (Arg_complete.complete_argv ["--set"; ""] speclist anon_complete)
+  assert_complete all_empty ["--set"; ""]
 
 let test_clear _ =
-  assert_equal all_empty (Arg_complete.complete_argv ["--clear"; ""] speclist anon_complete)
+  assert_complete all_empty ["--clear"; ""]
 
 let test_string _ =
-  assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv ["--string"; ""] speclist anon_complete);
-  assert_equal ["a"] (Arg_complete.complete_argv ["--string"; "a"] speclist anon_complete);
-  assert_equal all_empty (Arg_complete.complete_argv ["--string"; "a"; ""] speclist anon_complete)
+  assert_complete ["a"; "b"; "c"] ["--string"; ""];
+  assert_complete ["a"] ["--string"; "a"];
+  assert_complete all_empty ["--string"; "a"; ""]
 
 let test_set_string _ =
-  assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv ["--set_string"; ""] speclist anon_complete);
-  assert_equal ["a"] (Arg_complete.complete_argv ["--set_string"; "a"] speclist anon_complete);
-  assert_equal all_empty (Arg_complete.complete_argv ["--set_string"; "a"; ""] speclist anon_complete)
+  assert_complete ["a"; "b"; "c"] ["--set_string"; ""];
+  assert_complete ["a"] ["--set_string"; "a"];
+  assert_complete all_empty ["--set_string"; "a"; ""]
 
 let test_symbol _ =
-  assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv ["--symbol"; ""] speclist anon_complete);
-  assert_equal ["a"] (Arg_complete.complete_argv ["--symbol"; "a"] speclist anon_complete);
-  assert_equal all_empty (Arg_complete.complete_argv ["--symbol"; "a"; ""] speclist anon_complete)
+  assert_complete ["a"; "b"; "c"] ["--symbol"; ""];
+  assert_complete ["a"] ["--symbol"; "a"];
+  assert_complete all_empty ["--symbol"; "a"; ""]
 
 let test_tuple _ =
-  assert_equal ["false"; "true"] (Arg_complete.complete_argv ["--tuple"; ""] speclist anon_complete);
-  assert_equal ["true"] (Arg_complete.complete_argv ["--tuple"; "t"] speclist anon_complete);
-  assert_equal ["a"; "b"; "c"] (Arg_complete.complete_argv ["--tuple"; "true"; ""] speclist anon_complete);
-  assert_equal ["a"] (Arg_complete.complete_argv ["--tuple"; "true"; "a"] speclist anon_complete);
-  assert_equal all_empty (Arg_complete.complete_argv ["--tuple"; "true"; "a"; ""] speclist anon_complete)
+  assert_complete ["false"; "true"] ["--tuple"; ""];
+  assert_complete ["true"] ["--tuple"; "t"];
+  assert_complete ["a"; "b"; "c"] ["--tuple"; "true"; ""];
+  assert_complete ["a"] ["--tuple"; "true"; "a"];
+  assert_complete all_empty ["--tuple"; "true"; "a"; ""]
 
 let test_rest _ =
-  assert_equal ["foo"; "bar"] (Arg_complete.complete_argv ["--"; ""] speclist anon_complete);
-  assert_equal ["foo"; "bar"] (Arg_complete.complete_argv ["--"; "foo"; ""] speclist anon_complete)
+  assert_complete ["foo"; "bar"] ["--"; ""];
+  assert_complete ["foo"; "bar"] ["--"; "foo"; ""]
 
 let test_rest_all _ =
 #if OCAML_VERSION >= (4, 12, 0)
-  assert_equal ["foo"; "bar"] (Arg_complete.complete_argv ["-+"; ""] speclist anon_complete);
-  assert_equal ["bar"] (Arg_complete.complete_argv ["-+"; "foo"; ""] speclist anon_complete)
+  assert_complete ["foo"; "bar"] ["-+"; ""];
+  assert_complete ["bar"] ["-+"; "foo"; ""]
 #else
   skip_if true "OCaml < 4.12 doesn't have Arg.Rest_all"
 #endif
 
-let printer l = Format.asprintf "%a" (Format.pp_print_list Format.pp_print_string) l
-
 let test_expand _ =
-  assert_equal ~printer ["bar"; "baz"] (Arg_complete.complete_argv ["--expand"; "b"] speclist anon_complete);
-  assert_equal ~printer all_empty (Arg_complete.complete_argv ["--expand"; "b"; ""] speclist anon_complete)
+  assert_complete ["bar"; "baz"] ["--expand"; "b"];
+  assert_complete all_empty ["--expand"; "b"; ""]
 
 let test_side_effect _ =
-  assert_equal ~printer [] (Arg_complete.complete_argv ["--side_effect"; ""] speclist anon_complete);
-  assert_equal ~printer ["foo"] (Arg_complete.complete_argv ["--side_effect"; "foo"; ""] speclist anon_complete);
-  assert_equal ~printer all_empty (Arg_complete.complete_argv ["--side_effect"; "foo"; "foo"; ""] speclist anon_complete)
+  assert_complete [] ["--side_effect"; ""];
+  assert_complete ["foo"] ["--side_effect"; "foo"; ""];
+  assert_complete all_empty ["--side_effect"; "foo"; "foo"; ""]
 
 
 let tests =
