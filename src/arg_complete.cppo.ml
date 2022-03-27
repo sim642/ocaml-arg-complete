@@ -45,7 +45,7 @@ let rec arg_spec: spec -> Arg.spec = function
 let arg_speclist: speclist -> arg_speclist = fun l ->
   List.map (fun (k, sc, d) -> (k, arg_spec sc, d)) l
 
-#if OCAML_VERSION >= (4, 12, 0)
+#if OCAML_VERSION >= (4, 13, 0)
 let starts_with = String.starts_with
 #else
 (* Copied from OCaml Stdlib *)
