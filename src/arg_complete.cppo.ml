@@ -151,3 +151,46 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
           complete_arg argv'
   in
   complete_arg argv
+
+
+module Rest_all_compat =
+struct
+#if OCAML_VERSION >= (4, 12, 0)
+  type t = {
+    parse: string list -> unit;
+    complete: complete_all;
+  }
+
+  let create parse complete = {parse; complete}
+
+  let spec {parse; complete; _} =
+    Rest_all (parse, complete)
+
+  let finish _ = ()
+#else
+  type t = {
+    parse: string list -> unit;
+    complete: complete_all; (* TODO: use *)
+    mutable parse_args: string list option;
+    mutable complete_args: string list option; (* TODO: use *)
+  }
+
+  let create parse complete =
+    {parse; complete; parse_args = None; complete_args = None}
+
+  let spec r =
+    let cons_opt x xs = Some (match xs with
+        | None -> [x]
+        | Some xs -> x :: xs
+      )
+    in
+    let parse s = r.parse_args <- cons_opt s r.parse_args in
+    let complete s = r.complete_args <- cons_opt s r.complete_args; [] in
+    Rest (parse, complete)
+
+  let finish {parse; parse_args; _} =
+    match parse_args with
+    | Some acc -> parse (List.rev acc)
+    | None -> ()
+#endif
+end
