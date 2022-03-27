@@ -68,7 +68,7 @@ let filter_map = List.filter_map
 (* Copied from OCaml Stdlib *)
 let filter_map f =
   let rec aux accu = function
-    | [] -> rev accu
+    | [] -> List.rev accu
     | x :: l ->
         match f x with
         | None -> aux accu l
