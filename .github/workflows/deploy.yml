@@ -7,7 +7,7 @@ on:
 
 jobs:
   doc:
-   strategy:
+    strategy:
       matrix:
         ocaml-compiler:
           - 4.13.x
