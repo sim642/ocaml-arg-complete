@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+
+# Temporary usage:
+#   Run: source ./demo-completion.sh
+#
+# Permanent usage:
+#   Run: echo "source $(readlink -f .)/demo-completion.sh" >> ~/.bash_completion
+
 _demo ()
 {
     IFS=$'\n'
