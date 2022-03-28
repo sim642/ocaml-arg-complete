@@ -75,6 +75,12 @@ let empty_all _ = []
 type anon_complete = complete
 
 let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
+  let speclist =
+    speclist @ [
+        ("-help", Unit (fun _ -> assert false), "");
+        ("--help", Unit (fun _ -> assert false), "");
+      ]
+  in
   let rec complete_arg (argv: string list) =
     match argv with
     | [] -> []

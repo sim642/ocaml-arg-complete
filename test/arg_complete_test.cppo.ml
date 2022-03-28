@@ -28,7 +28,7 @@ let speclist: Arg_complete.speclist = [
 ]
 
 
-let all_keys = List.map (fun (key, _, _) -> key) speclist
+let all_keys = List.map (fun (key, _, _) -> key) speclist @ ["-help"; "--help"]
 let all_empty = ["bar"; "baz"]
 
 
@@ -106,6 +106,10 @@ let test_side_effect _ =
   assert_complete ["foo"] ["--side_effect"; "foo"; ""];
   assert_complete all_empty ["--side_effect"; "foo"; "foo"; ""]
 
+let test_help _ =
+  assert_complete ["--help"] ["--h"];
+  assert_complete ["-help"] ["-h"]
+
 
 let tests =
   "arg_complete_test" >::: [
@@ -123,6 +127,7 @@ let tests =
     "rest_all" >:: test_rest_all;
     "expand" >:: test_expand;
     "side_effect" >:: test_side_effect;
+    "help" >:: test_help;
   ]
 
 let () = run_test_tt_main tests
