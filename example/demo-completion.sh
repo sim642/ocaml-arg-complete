@@ -5,4 +5,4 @@ _demo ()
     COMPREPLY=($(${COMP_WORDS[0]} --complete "${COMP_WORDS[@]:1:COMP_CWORD}"))
 }
 
-complete -o default -F _demo demo.exe
+complete -o default -F _demo demo.exe demo_compat.exe
