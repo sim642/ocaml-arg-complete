@@ -2,6 +2,7 @@
 (name arg-complete)
 (generate_opam_files true)
 (source (github sim642/ocaml-arg-complete))
+(documentation https://sim642.github.io/ocaml-arg-complete)
 (authors "Simmo Saan <simmo.saan@gmail.com>")
 (maintainers "Simmo Saan <simmo.saan@gmail.com>")
 (license MIT)
