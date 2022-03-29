@@ -153,6 +153,63 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
   in
   complete_arg argv
 
+let complete_argv2 (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
+  let speclist =
+    speclist @ [
+        ("-help", Unit (fun _ -> assert false), "");
+        ("--help", Unit (fun _ -> assert false), "");
+      ]
+  in
+  let complete_key arg =
+    (* List.filter_map for OCaml < 4.08 *)
+    speclist
+    |> List.fold_left (fun acc (key, _spec, _doc) ->
+        if Util.starts_with ~prefix:arg key then
+          key :: acc
+        else
+          acc
+      ) []
+    |> List.rev
+  in
+  let completions = ref [] in
+  let rec arg_spec key = function
+    | Unit _f -> Arg.Unit (fun () -> ())
+    | Bool _f -> Arg.String (fun s -> completions := strings ["false"; "true"] s)
+    | Set r -> Arg.Set r
+    | Clear r -> Arg.Clear r
+    | String (_f, c) -> Arg.String (fun s -> completions := c s)
+    | Set_string (_r, c) -> Arg.String (fun s -> completions := c s)
+    | Int (f, _c) -> Arg.Int f
+    | Set_int (r, _c) -> Arg.Set_int r
+    | Float (f, _c) -> Arg.Float f
+    | Set_float (r, _c) -> Arg.Set_float r
+    | Symbol (l, _f) -> Arg.String (fun s -> completions := strings l s)
+    | Tuple l -> Arg.Tuple (List.map (arg_spec key) l)
+    | Rest (_f, c) -> Arg.Rest (fun s -> completions := c s)
+#if OCAML_VERSION >= (4, 12, 0)
+    | Rest_all (_f, c) -> Arg.Rest_all (fun s -> completions := c s)
+#endif
+#if OCAML_VERSION >= (4, 5, 0)
+    | Expand f -> Arg.Expand f
+#endif
+  in
+  let arg_speclist = List.map (fun (key, spec, doc) -> (key, arg_spec key spec, doc)) speclist in
+  let anon_fun s = completions := anon_complete s in
+  let current = ref 0 in (* Arg has global state... *)
+  let argv = ref (Array.of_list ("prog" :: argv)) in
+  begin
+    try
+      Arg.parse_and_expand_argv_dynamic current argv (ref arg_speclist) anon_fun "";
+      decr current
+    with Arg.Bad _ ->
+      ()
+  end;
+  let arg = !argv.(!current) in
+  if Util.starts_with ~prefix:"-" arg then
+    complete_key arg
+  else
+    !completions
+
 
 module Rest_all_compat =
 struct

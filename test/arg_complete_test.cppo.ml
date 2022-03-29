@@ -34,7 +34,7 @@ let all_empty = ["bar"; "baz"]
 
 let assert_complete expected args =
   let printer = Format.asprintf "%a" (Format.pp_print_list ~pp_sep:(fun ppf () -> Format.pp_print_string ppf ", ") Format.pp_print_string) in
-  assert_equal ~printer expected (Arg_complete.complete_argv args speclist anon_complete)
+  assert_equal ~printer expected (Arg_complete.complete_argv2 args speclist anon_complete)
 
 
 let test_anon _ =

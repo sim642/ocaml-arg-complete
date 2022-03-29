@@ -61,6 +61,8 @@ type anon_complete = complete
 val complete_argv: string list -> speclist -> anon_complete -> string list
 (** [complete_argv args speclist anon_complete] provides the completions for the partial arguments [args] using [speclist] for options and [anon_complete] for anonymous arguments. *)
 
+val complete_argv2: string list -> speclist -> anon_complete -> string list
+
 (** {1 Convenience} *)
 
 val empty: complete
