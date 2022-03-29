@@ -110,6 +110,9 @@ let test_help _ =
   assert_complete ["--help"] ["--h"];
   assert_complete ["-help"] ["-h"]
 
+let test_skip _ =
+  assert_complete ["--unit"] ["--foo"; "--uni"]
+
 
 let tests =
   "arg_complete_test" >::: [
@@ -128,6 +131,7 @@ let tests =
     "expand" >:: test_expand;
     "side_effect" >:: test_side_effect;
     "help" >:: test_help;
+    "skip" >:: test_skip;
   ]
 
 let () = run_test_tt_main tests
