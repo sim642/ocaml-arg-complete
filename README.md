@@ -7,5 +7,10 @@
 Bash completion support for OCaml `Stdlib.Arg`.
 
 
+## Installation
+```console
+opam install arg-complete
+```
+
 ## Usage
 See [API documentation](https://sim642.github.io/ocaml-arg-complete/) and [`example/`](example/) for example usage.
