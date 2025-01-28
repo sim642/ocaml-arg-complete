@@ -75,6 +75,20 @@ let empty_all _ = []
 type anon_complete = complete
 
 let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
+  (* support autocompletion of -flag=val too. To do this, the minimal edit seems to be filtering out those `=` *)
+  let argv =
+    let rec filter_equals new_args is_last_arg_flag = function
+      | [] -> List.rev new_args
+      | arg :: args ->
+        if Util.starts_with ~prefix:"-" arg then
+          filter_equals (arg :: new_args) true args
+        else if arg = "=" && is_last_arg_flag then
+          if args = [] then filter_equals new_args false [""]
+          else filter_equals new_args false args
+        else
+          filter_equals (arg :: new_args) false args in
+    filter_equals [] false argv
+  in
   let speclist =
     speclist @ [
         ("-help", Unit (fun _ -> assert false), "");
