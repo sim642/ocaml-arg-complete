@@ -143,7 +143,7 @@ let complete_argv ?(prefer_getopt_long: bool = false) (argv: string list) (specl
           let (_, spec, _) = List.find (fun (key, _, _) -> arg = key) speclist in
           complete_spec spec argv'
         with Not_found ->
-          (* TODO: need to handle = here? *)
+          (* No need to handle = here: only argument of such option (whatever it is) is skipped over by proceeding with argv'. *)
           complete_arg argv'
       end
     | [arg] ->
