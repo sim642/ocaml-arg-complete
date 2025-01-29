@@ -80,7 +80,28 @@ let empty_all _ = []
 
 type anon_complete = complete
 
-let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
+let has_getopt_long_arg: spec -> bool = function
+  | Unit _ -> false
+  | Bool _ -> true
+  | Set _ -> false
+  | Clear _ -> false
+  | String _ -> true
+  | Set_string _ -> true
+  | Int _ -> true
+  | Set_int _ -> true
+  | Float _ -> true
+  | Set_float _ -> true
+  | Symbol _ -> true
+  | Tuple _ -> false
+  | Rest _ -> false
+#if OCAML_VERSION >= (4, 12, 0)
+  | Rest_all _ -> false
+#endif
+#if OCAML_VERSION >= (4, 5, 0)
+  | Expand _ -> true
+#endif
+
+let complete_argv ?(prefer_getopt_long: bool = false) (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
   let speclist =
     speclist @ [
         ("-help", Unit (fun _ -> assert false), "");
@@ -104,9 +125,13 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
         | exception Not_found ->
           (* List.filter_map for OCaml < 4.08 *)
           speclist
-          |> List.fold_left (fun acc (key, _spec, _doc) ->
-              if Util.starts_with ~prefix:arg key then
-                key :: acc
+          |> List.fold_left (fun acc (key, spec, _doc) ->
+              if Util.starts_with ~prefix:arg key then (
+                if prefer_getopt_long && has_getopt_long_arg spec then
+                  (key ^ "=") :: acc
+                else
+                  key :: acc
+              )
               else
                 acc
             ) []
