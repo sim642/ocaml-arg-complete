@@ -46,7 +46,14 @@ struct
 
   let all_keys =
     if prefer_getopt_long then
-      ["--unit"; "--bool="; "--set"; "--clear"; "--string="; "--set_string="; "--symbol="; "--tuple"; "--"; "-+"; "--expand="; "--side_effect"; "-help"; "--help"]
+      ["--unit"; "--bool="; "--set"; "--clear"; "--string="; "--set_string="; "--symbol="; "--tuple"; "--";
+#if OCAML_VERSION >= (4, 12, 0)
+      "-+";
+#endif
+#if OCAML_VERSION >= (4, 5, 0)
+      "--expand=";
+#endif
+      "--side_effect"; "-help"; "--help"]
     else
       all_keys
 
