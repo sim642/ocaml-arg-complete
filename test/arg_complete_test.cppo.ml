@@ -54,7 +54,11 @@ let test_unit _ =
 let test_bool _ =
   assert_complete ["false"; "true"] ["--bool"; ""];
   assert_complete ["true"] ["--bool"; "t"];
-  assert_complete all_empty ["--bool"; "true"; ""]
+  assert_complete all_empty ["--bool"; "true"; ""];
+
+  assert_complete ["--bool=false"; "--bool=true"] ["--bool="];
+  assert_complete ["--bool=true"] ["--bool=t"];
+  assert_complete all_empty ["--bool=true"; ""]
 
 let test_set _ =
   assert_complete all_empty ["--set"; ""]
