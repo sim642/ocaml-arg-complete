@@ -13,6 +13,10 @@ jobs:
           - ubuntu-latest
           # - macos-latest
         ocaml-compiler:
+          - 5.3.x
+          - 5.2.x
+          - 5.1.x
+          - 5.0.x
           - 4.14.x
           - 4.13.x
           - 4.12.x
@@ -31,10 +35,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
@@ -67,10 +71,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
@@ -83,7 +87,7 @@ jobs:
       - name: Downgrade dependencies
         # must specify ocaml-base-compiler again to prevent it from being downgraded
         # run: opam install $(opam exec -- opam-0install --prefer-oldest arg-complete ocaml-base-compiler.${{ matrix.ocaml-compiler }})
-        run: opam install --unlock-base $(opam exec -- opam-0install --prefer-oldest --with-test arg-complete)
+        run: opam install --update-invariant $(opam exec -- opam-0install --prefer-oldest --with-test arg-complete)
 
       - name: Build
         run: opam exec -- dune build
@@ -105,10 +109,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
