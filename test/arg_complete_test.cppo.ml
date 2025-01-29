@@ -69,17 +69,29 @@ let test_clear _ =
 let test_string _ =
   assert_complete ["a"; "b"; "c"] ["--string"; ""];
   assert_complete ["a"] ["--string"; "a"];
-  assert_complete all_empty ["--string"; "a"; ""]
+  assert_complete all_empty ["--string"; "a"; ""];
+
+  assert_complete ["--string=a"; "--string=b"; "--string=c"] ["--string="];
+  assert_complete ["--string=a"] ["--string=a"];
+  assert_complete all_empty ["--string=a"; ""]
 
 let test_set_string _ =
   assert_complete ["a"; "b"; "c"] ["--set_string"; ""];
   assert_complete ["a"] ["--set_string"; "a"];
-  assert_complete all_empty ["--set_string"; "a"; ""]
+  assert_complete all_empty ["--set_string"; "a"; ""];
+
+  assert_complete ["--set_string=a"; "--set_string=b"; "--set_string=c"] ["--set_string="];
+  assert_complete ["--set_string=a"] ["--set_string=a"];
+  assert_complete all_empty ["--set_string=a"; ""]
 
 let test_symbol _ =
   assert_complete ["a"; "b"; "c"] ["--symbol"; ""];
   assert_complete ["a"] ["--symbol"; "a"];
-  assert_complete all_empty ["--symbol"; "a"; ""]
+  assert_complete all_empty ["--symbol"; "a"; ""];
+
+  assert_complete ["--symbol=a"; "--symbol=b"; "--symbol=c"] ["--symbol="];
+  assert_complete ["--symbol=a"] ["--symbol=a"];
+  assert_complete all_empty ["--symbol=a"; ""]
 
 let test_tuple _ =
   assert_complete ["false"; "true"] ["--tuple"; ""];
