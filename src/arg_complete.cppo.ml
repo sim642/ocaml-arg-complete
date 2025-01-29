@@ -64,6 +64,12 @@ struct
       else aux (i + 1)
     in len_s >= len_pre && aux 0
 #endif
+
+  (* Copied from OCaml Stdlib.Arg *)
+  let split s =
+    let i = String.index s '=' in
+    let len = String.length s in
+    String.sub s 0 i, String.sub s (i+1) (len-(i+1))
 end
 
 let strings l s =
@@ -85,21 +91,34 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
     match argv with
     | [] -> []
     | [arg] when Util.starts_with ~prefix:"-" arg ->
-      (* List.filter_map for OCaml < 4.08 *)
-      speclist
-      |> List.fold_left (fun acc (key, _spec, _doc) ->
-          if Util.starts_with ~prefix:arg key then
-            key :: acc
-          else
-            acc
-        ) []
-      |> List.rev
+      begin match Util.split arg with
+        | arg, arg' ->
+          begin
+            try
+              let (_, spec, _) = List.find (fun (key, _, _) -> arg = key) speclist in
+              complete_spec spec [arg']
+              |> List.map (fun s -> arg ^ "=" ^ s)
+            with Not_found ->
+              []
+          end
+        | exception Not_found ->
+          (* List.filter_map for OCaml < 4.08 *)
+          speclist
+          |> List.fold_left (fun acc (key, _spec, _doc) ->
+              if Util.starts_with ~prefix:arg key then
+                key :: acc
+              else
+                acc
+            ) []
+          |> List.rev
+      end
     | arg :: argv' when Util.starts_with ~prefix:"-" arg ->
       begin
         try
           let (_, spec, _) = List.find (fun (key, _, _) -> arg = key) speclist in
           complete_spec spec argv'
         with Not_found ->
+          (* TODO: need to handle = here? *)
           complete_arg argv'
       end
     | [arg] ->

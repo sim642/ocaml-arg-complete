@@ -117,6 +117,9 @@ let test_help _ =
 let test_skip _ =
   assert_complete ["--unit"] ["--foo"; "--uni"]
 
+let test_equal _ =
+  assert_complete [] ["--foo="]
+
 
 let tests =
   "arg_complete_test" >::: [
@@ -136,6 +139,7 @@ let tests =
     "side_effect" >:: test_side_effect;
     "help" >:: test_help;
     "skip" >:: test_skip;
+    "equal" >:: test_equal;
   ]
 
 let () = run_test_tt_main tests
