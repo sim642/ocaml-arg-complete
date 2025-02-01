@@ -12,10 +12,10 @@ __ltrim_equal_completions()
 {
     if [[ $1 == *=* && $COMP_WORDBREAKS == *=* ]]; then
         # Remove equal-word prefix from COMPREPLY items
-        local colon_word=${1%"${1##*=}"}
+        local equal_word=${1%"${1##*=}"}
         local i=${#COMPREPLY[*]}
         while ((i-- > 0)); do
-            COMPREPLY[i]=${COMPREPLY[i]#"$colon_word"}
+            COMPREPLY[i]=${COMPREPLY[i]#"$equal_word"}
         done
     fi
 }
