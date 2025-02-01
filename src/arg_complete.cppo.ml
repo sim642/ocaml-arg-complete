@@ -127,10 +127,14 @@ let complete_argv ?(prefer_getopt_long: bool = false) (argv: string list) (specl
           speclist
           |> List.fold_left (fun acc (key, spec, _doc) ->
               if Util.starts_with ~prefix:arg key then (
-                if prefer_getopt_long && has_getopt_long_arg spec then
-                  complete_spec spec [""]
-                  |> List.rev_map (fun s -> key ^ "=" ^ s)
-                  |> (fun keyvals -> keyvals @ acc) (* Fun.flip List.append acc but for OCaml < 4.08 *)
+                if prefer_getopt_long && has_getopt_long_arg spec then (
+                  match complete_spec spec [""] with
+                  | [] -> (key ^ "=") :: acc
+                  | completions ->
+                    completions
+                    |> List.rev_map (fun s -> key ^ "=" ^ s)
+                    |> (fun keyvals -> keyvals @ acc) (* Fun.flip List.append acc but for OCaml < 4.08 *)
+                )
                 else
                   key :: acc
               )

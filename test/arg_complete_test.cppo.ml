@@ -25,6 +25,7 @@ let speclist: Arg_complete.speclist = [
     let spec2 = Arg_complete.String (Printf.printf "side_effect: %s\n", (fun _ -> [!tmp])) in
     Tuple [spec1; spec2]),
     "side effect");
+  ("--empty", String (Printf.printf "empty: %s\n", Arg_complete.empty), "empty");
 ]
 
 
@@ -53,7 +54,7 @@ struct
 #if OCAML_VERSION >= (4, 5, 0)
       "--expand=bar"; "--expand=baz";
 #endif
-      "--side_effect"; "-help"; "--help"]
+      "--side_effect"; "--empty="; "-help"; "--help"]
     else
       all_keys
 
@@ -142,6 +143,15 @@ struct
     assert_complete ["foo"] ["--side_effect"; "foo"; ""];
     assert_complete all_empty ["--side_effect"; "foo"; "foo"; ""]
 
+  let test_empty _ =
+    assert_complete [] ["--empty"; ""];
+    assert_complete [] ["--empty"; "a"];
+    assert_complete all_empty ["--empty"; "a"; ""];
+
+    assert_complete [] ["--empty="];
+    assert_complete [] ["--empty=a"];
+    assert_complete all_empty ["--empty=a"; ""]
+
   let test_help _ =
     assert_complete ["--help"] ["--h"];
     assert_complete ["-help"] ["-h"]
@@ -169,6 +179,7 @@ struct
       "rest_all" >:: test_rest_all;
       "expand" >:: test_expand;
       "side_effect" >:: test_side_effect;
+      "empty" >:: test_empty;
       "help" >:: test_help;
       "skip" >:: test_skip;
       "equal" >:: test_equal;
