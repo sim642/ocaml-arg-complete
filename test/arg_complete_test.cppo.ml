@@ -46,12 +46,12 @@ struct
 
   let all_keys =
     if prefer_getopt_long then
-      ["--unit"; "--bool="; "--set"; "--clear"; "--string="; "--set_string="; "--symbol="; "--tuple"; "--";
+      ["--unit"; "--bool=false"; "--bool=true"; "--set"; "--clear"; "--string=a"; "--string=b"; "--string=c"; "--set_string=a"; "--set_string=b"; "--set_string=c"; "--symbol=a"; "--symbol=b"; "--symbol=c"; "--tuple"; "--";
 #if OCAML_VERSION >= (4, 12, 0)
       "-+";
 #endif
 #if OCAML_VERSION >= (4, 5, 0)
-      "--expand=";
+      "--expand=bar"; "--expand=baz";
 #endif
       "--side_effect"; "-help"; "--help"]
     else
@@ -59,7 +59,7 @@ struct
 
   let test_key _ =
     assert_complete ["--unit"] ["--uni"];
-    assert_complete (if prefer_getopt_long then ["--string="] else ["--string"]) ["--str"];
+    assert_complete (if prefer_getopt_long then ["--string=a"; "--string=b"; "--string=c"] else ["--string"]) ["--str"];
     assert_complete all_keys ["-"];
     assert_complete all_empty [""];
     assert_complete ["--unit"] ["--unit"]
@@ -131,7 +131,11 @@ struct
 
   let test_expand _ =
     assert_complete ["bar"; "baz"] ["--expand"; "b"];
-    assert_complete all_empty ["--expand"; "b"; ""]
+    assert_complete all_empty ["--expand"; "b"; ""];
+
+    assert_complete ["--expand=bar"; "--expand=baz"] ["--expand="];
+    assert_complete ["--expand=bar"; "--expand=baz"] ["--expand=b"];
+    assert_complete all_empty ["--expand=b"; ""]
 
   let test_side_effect _ =
     assert_complete [] ["--side_effect"; ""];
