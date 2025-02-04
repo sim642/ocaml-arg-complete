@@ -11,5 +11,6 @@
  (name arg-complete)
  (synopsis "Bash completion support for Stdlib.Arg")
  (depends
+  ocaml
   (cppo (>= 1.1.0))
   (ounit2 :with-test)))
