@@ -64,6 +64,12 @@ struct
       else aux (i + 1)
     in len_s >= len_pre && aux 0
 #endif
+
+  (* Copied from OCaml Stdlib.Arg *)
+  let split s =
+    let i = String.index s '=' in
+    let len = String.length s in
+    String.sub s 0 i, String.sub s (i+1) (len-(i+1))
 end
 
 let strings l s =
@@ -74,7 +80,28 @@ let empty_all _ = []
 
 type anon_complete = complete
 
-let complete_argv (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
+let has_getopt_long_arg: spec -> bool = function
+  | Unit _ -> false
+  | Bool _ -> true
+  | Set _ -> false
+  | Clear _ -> false
+  | String _ -> true
+  | Set_string _ -> true
+  | Int _ -> true
+  | Set_int _ -> true
+  | Float _ -> true
+  | Set_float _ -> true
+  | Symbol _ -> true
+  | Tuple _ -> false
+  | Rest _ -> false
+#if OCAML_VERSION >= (4, 12, 0)
+  | Rest_all _ -> false
+#endif
+#if OCAML_VERSION >= (4, 5, 0)
+  | Expand _ -> true
+#endif
+
+let complete_argv ?(prefer_getopt_long: bool = false) (argv: string list) (speclist: speclist) (anon_complete: complete): string list =
   let speclist =
     speclist @ [
         ("-help", Unit (fun _ -> assert false), "");
@@ -85,71 +112,94 @@ let complete_argv (argv: string list) (speclist: speclist) (anon_complete: compl
     match argv with
     | [] -> []
     | [arg] when Util.starts_with ~prefix:"-" arg ->
-      (* List.filter_map for OCaml < 4.08 *)
-      speclist
-      |> List.fold_left (fun acc (key, _spec, _doc) ->
-          if Util.starts_with ~prefix:arg key then
-            key :: acc
-          else
-            acc
-        ) []
-      |> List.rev
+      begin match Util.split arg with
+        | arg, arg' ->
+          begin
+            try
+              let (_, spec, _) = List.find (fun (key, _, _) -> arg = key) speclist in
+              complete_spec spec [arg']
+              |> List.map (fun s -> arg ^ "=" ^ s)
+            with Not_found ->
+              []
+          end
+        | exception Not_found ->
+          (* List.filter_map for OCaml < 4.08 *)
+          speclist
+          |> List.fold_left (fun acc (key, spec, _doc) ->
+              if Util.starts_with ~prefix:arg key then (
+                if prefer_getopt_long && has_getopt_long_arg spec then (
+                  match complete_spec spec [""] with
+                  | [] -> (key ^ "=") :: acc
+                  | completions ->
+                    completions
+                    |> List.rev_map (fun s -> key ^ "=" ^ s)
+                    |> (fun keyvals -> keyvals @ acc) (* Fun.flip List.append acc but for OCaml < 4.08 *)
+                )
+                else
+                  key :: acc
+              )
+              else
+                acc
+            ) []
+          |> List.rev
+      end
     | arg :: argv' when Util.starts_with ~prefix:"-" arg ->
-      let rec complete_spec spec argv' =
-        match spec, argv' with
-        | Unit _f, argv' -> complete_arg argv'
-        | Bool _f, [arg'] -> strings ["false"; "true"] arg'
-        | Bool _f, _ :: argv' -> complete_arg argv'
-        | Set _r, argv' -> complete_arg argv'
-        | Clear _r, argv' -> complete_arg argv'
-        | String (_f, c), [arg'] -> c arg'
-        | String (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
-        | Set_string (_r, c), [arg'] -> c arg'
-        | Set_string (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
-        | Int (_f, c), [arg'] -> c arg'
-        | Int (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
-        | Set_int (_r, c), [arg'] -> c arg'
-        | Set_int (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
-        | Float (_f, c), [arg'] -> c arg'
-        | Float (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
-        | Set_float (_r, c), [arg'] -> c arg'
-        | Set_float (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
-        | Tuple l, argv' ->
-          let rec complete_tuple l argv' = match l, argv' with
-            | s :: _, [arg'] -> complete_spec s [arg']
-            | s :: l', arg' :: argv' -> ignore (complete_spec s [arg']); complete_tuple l' argv'
-            | [], argv' -> complete_arg argv'
-            | _, _ -> failwith "cannot complete tuple"
-          in
-          complete_tuple l argv'
-        | Symbol (l, _f), [arg'] -> strings l arg'
-        | Symbol (_l, _f), _ :: argv' -> complete_arg argv'
-        | Rest (_f, c), argv' ->
-          let rec complete_rest = function
-            | [arg] -> c arg
-            | arg :: argv' -> ignore (c arg); complete_rest argv'
-            | _ -> failwith "cannot complete rest"
-          in
-          complete_rest argv'
-#if OCAML_VERSION >= (4, 12, 0)
-        | Rest_all (_f, c), argv' -> c argv'
-#endif
-#if OCAML_VERSION >= (4, 5, 0)
-        | Expand f, arg' :: argv' -> complete_arg (Array.to_list (f arg') @ argv')
-#endif
-        | _, _ -> failwith "cannot complete"
-      in
       begin
         try
           let (_, spec, _) = List.find (fun (key, _, _) -> arg = key) speclist in
           complete_spec spec argv'
         with Not_found ->
+          (* No need to handle = here: only argument of such option (whatever it is) is skipped over by proceeding with argv'. *)
           complete_arg argv'
       end
     | [arg] ->
       anon_complete arg
     | _ :: argv' ->
       complete_arg argv'
+
+  and complete_spec spec argv' =
+    match spec, argv' with
+    | Unit _f, argv' -> complete_arg argv'
+    | Bool _f, [arg'] -> strings ["false"; "true"] arg'
+    | Bool _f, _ :: argv' -> complete_arg argv'
+    | Set _r, argv' -> complete_arg argv'
+    | Clear _r, argv' -> complete_arg argv'
+    | String (_f, c), [arg'] -> c arg'
+    | String (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
+    | Set_string (_r, c), [arg'] -> c arg'
+    | Set_string (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
+    | Int (_f, c), [arg'] -> c arg'
+    | Int (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
+    | Set_int (_r, c), [arg'] -> c arg'
+    | Set_int (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
+    | Float (_f, c), [arg'] -> c arg'
+    | Float (_f, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
+    | Set_float (_r, c), [arg'] -> c arg'
+    | Set_float (_r, c), arg' :: argv' -> ignore (c arg'); complete_arg argv'
+    | Tuple l, argv' ->
+      let rec complete_tuple l argv' = match l, argv' with
+        | s :: _, [arg'] -> complete_spec s [arg']
+        | s :: l', arg' :: argv' -> ignore (complete_spec s [arg']); complete_tuple l' argv'
+        | [], argv' -> complete_arg argv'
+        | _, _ -> failwith "cannot complete tuple"
+      in
+      complete_tuple l argv'
+    | Symbol (l, _f), [arg'] -> strings l arg'
+    | Symbol (_l, _f), _ :: argv' -> complete_arg argv'
+    | Rest (_f, c), argv' ->
+      let rec complete_rest = function
+        | [arg] -> c arg
+        | arg :: argv' -> ignore (c arg); complete_rest argv'
+        | _ -> failwith "cannot complete rest"
+      in
+      complete_rest argv'
+#if OCAML_VERSION >= (4, 12, 0)
+    | Rest_all (_f, c), argv' -> c argv'
+#endif
+#if OCAML_VERSION >= (4, 5, 0)
+    | Expand f, arg' :: argv' -> complete_arg (Array.to_list (f arg') @ argv')
+#endif
+    | _, _ -> failwith "cannot complete"
   in
   complete_arg argv
 

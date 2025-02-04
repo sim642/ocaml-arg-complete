@@ -58,8 +58,10 @@ val arg_speclist: speclist -> arg_speclist
 
 type anon_complete = complete
 
-val complete_argv: string list -> speclist -> anon_complete -> string list
-(** [complete_argv args speclist anon_complete] provides the completions for the partial arguments [args] using [speclist] for options and [anon_complete] for anonymous arguments. *)
+val complete_argv: ?prefer_getopt_long:bool -> string list -> speclist -> anon_complete -> string list
+(** [complete_argv args speclist anon_complete] provides the completions for the partial arguments [args] using [speclist] for options and [anon_complete] for anonymous arguments.
+
+    @param prefer_getopt_long Complete [=] for options with argument ({!false} by default). GNU [getopt_long] format [keyword=arg] is supported regardless. *)
 
 (** {1 Convenience} *)
 
