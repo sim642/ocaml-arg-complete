@@ -131,12 +131,16 @@ struct
   #endif
 
   let test_expand _ =
+#if OCAML_VERSION >= (4, 5, 0)
     assert_complete ["bar"; "baz"] ["--expand"; "b"];
     assert_complete all_empty ["--expand"; "b"; ""];
 
     assert_complete ["--expand=bar"; "--expand=baz"] ["--expand="];
     assert_complete ["--expand=bar"; "--expand=baz"] ["--expand=b"];
     assert_complete all_empty ["--expand=b"; ""]
+#else
+    skip_if true "OCaml < 4.05 doesn't have Arg.Expand"
+#endif
 
   let test_side_effect _ =
     assert_complete [] ["--side_effect"; ""];
